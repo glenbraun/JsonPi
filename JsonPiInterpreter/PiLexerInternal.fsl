@@ -1,0 +1,82 @@
+﻿{
+module internal PiLexerInternal
+
+open System
+open System.Text
+
+// Opens methods related to fslex.exe
+open Microsoft.FSharp.Text.Lexing
+
+let lexeme = LexBuffer<_>.LexemeString
+
+let newline (lexbuf: LexBuffer<_>) = 
+    lexbuf.StartPos <- lexbuf.StartPos.NextLine
+}
+
+// Regular expressions
+let whitespace = [' ' '\t' ]
+let newline = ('\n' | '\r' '\n')
+let idstart = [ 'a'-'z' 'A'-'Z' '_' ]
+let id = idstart ( idstart | ['0'-'9'])*
+let hex_digit = ['0'-'9' 'A'-'F' 'a'-'f']
+let json_bool = ("true" | "false")
+let json_null = "null"
+let json_char = ("\\\"" | "\\\\" | "\\/" | "\\b" | "\\f" | "\\n" | "\\r" | "\\t" | ('\\' 'u' hex_digit hex_digit hex_digit hex_digit) | [^'"' '\\'])
+let json_string = '"' json_char* '"'
+let json_digit19 = ['1'-'9']
+let json_digit = ['0'-'9']
+let json_int = '-'? json_digit19 json_digit*
+let json_frac = '.' json_digit+
+let json_e = ['e' 'E']
+let json_plusminus = ['+' '-']
+let json_exp = json_e json_plusminus? json_digit+
+let json_float = json_int (json_frac | json_exp | (json_frac json_exp)) 
+
+rule pi = parse
+// --------------------------
+| "new"         { PiParserInternal.NEW }
+| "let"         { PiParserInternal.LET }
+| "module"      { PiParserInternal.MODULE }
+| "using"       { PiParserInternal.USING }
+| "choose"      { PiParserInternal.CHOOSE }
+| "when"        { PiParserInternal.WHEN }
+| "then"        { PiParserInternal.THEN }
+| "default"     { PiParserInternal.DEFAULT }
+| "end"         { PiParserInternal.END }
+| "continue"    { PiParserInternal.CONTINUE }
+| "in"          { PiParserInternal.IN }
+| "$"           { PiParserInternal.SYM_DOLLAR }
+| "("           { PiParserInternal.SYM_LPAREN }
+| ")"           { PiParserInternal.SYM_RPAREN }
+| "="           { PiParserInternal.SYM_EQUALS }
+| "!"           { PiParserInternal.SYM_BANG }
+| "<"           { PiParserInternal.SYM_LANGLE }
+| ">"           { PiParserInternal.SYM_RANGLE }
+| ":"           { PiParserInternal.SYM_COLON }
+| ";"           { PiParserInternal.SYM_SEMICOLON }
+| "|"           { PiParserInternal.SYM_BAR}
+| ","           { PiParserInternal.SYM_COMMA }
+| "."           { PiParserInternal.SYM_PERIOD }
+| "["           { PiParserInternal.SYM_LBRACKET }
+| "]"           { PiParserInternal.SYM_RBRACKET }
+| "{"           { PiParserInternal.SYM_LCURLY }
+| "}"           { PiParserInternal.SYM_RCURLY }
+| json_string   { PiParserInternal.JSON_STRING(lexeme lexbuf) }
+| json_int      { PiParserInternal.JSON_INT(lexeme lexbuf) }
+| json_float    { PiParserInternal.JSON_FLOAT(lexeme lexbuf) }
+| json_bool     { PiParserInternal.JSON_BOOL(lexeme lexbuf) }
+| json_null     { PiParserInternal.JSON_NULL(lexeme lexbuf) }
+| id            { PiParserInternal.ID(lexeme lexbuf) }
+// --------------------------
+| "//" [ ^ '\n']*       { pi lexbuf }
+| "(*" [ ^ ')']         { piComment 0 lexbuf }
+| whitespace+   { pi lexbuf }
+| newline       { newline lexbuf; pi lexbuf }
+// --------------------------
+| _         { failwith ("ParseError " + LexBuffer<_>.LexemeString lexbuf) }
+| eof       { PiParserInternal.EOF }
+and piComment c = parse
+| "(*" [ ^ ')'] { piComment (c+1) lexbuf }
+| "*)"          { if c = 0 then pi lexbuf else piComment (c-1) lexbuf }
+| _             { piComment c lexbuf }
+| eof           { PiParserInternal.EOF }

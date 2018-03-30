@@ -1,0 +1,204 @@
+﻿%{
+open System
+open JsonPi.Data
+
+%}
+
+// The start token becomes a parser function in the compiled code:
+%start start
+
+// Regular tokens
+%token NEW LET MODULE USING CHOOSE WHEN THEN DEFAULT END
+       CONTINUE
+       IN
+       SYM_DOLLAR 
+       SYM_LPAREN SYM_RPAREN
+       SYM_EQUALS
+       SYM_BANG
+       SYM_BAR
+       SYM_COMMA
+       SYM_PERIOD
+       SYM_LANGLE
+       SYM_RANGLE
+       SYM_LBRACKET
+       SYM_RBRACKET
+       SYM_LCURLY
+       SYM_RCURLY
+       SYM_SEMICOLON
+       SYM_COLON
+%token <string> ID
+%token <string> JSON_BOOL
+%token <string> JSON_NULL
+%token <string> JSON_STRING
+%token <string> JSON_INT
+%token <string> JSON_FLOAT
+%token EOF
+
+%left SYM_BAR
+%right SYM_BANG SYM_LPAREN SYM_DOLLAR
+
+// This is the type of the data produced by a successful reduction of the 'start'
+// symbol:
+%type < PiJsonObject > start
+
+%%
+ 
+start: Assembly EOF                             { $1 }
+
+Assembly:
+    | Modules                                   { CreateAssembly "" $1 }
+
+Modules:
+    | Module                                    { [ $1 ] }
+    | Modules Module                            { $2 :: $1 }
+
+Module:
+    | Process                                   { CreateModule "" $1 }          
+    | MODULE DottedId Process                   { CreateModule $2 $3 }
+
+Process:
+    | ModuleRef                                 { $1 }
+
+ModuleRef:
+    | ProcessDefinition                         { $1 }
+    | USING DottedId ModuleInAssembly ModuleRef { CreateProcessModuleRef $2 $3 $4 }
+
+ModuleInAssembly:
+    |                                           { None }
+    | IN DottedId                               { Some($2) }
+
+ProcessDefinition:
+    | ProcessReplication						{ $1 }
+    | LET DottedId SYM_EQUALS Process Process   { CreateProcessBinding $2 $4 $5 }
+
+ProcessReplication:
+	| ProcessRestriction						{ $1 }
+	| SYM_BANG Process                          { CreateProcessReplication $2 }
+
+ProcessRestriction:
+	| ProcessComposition						{ $1 }
+    | NEW RestrictionName RestrictionType RestrictionInitialization Process { CreateProcessRestriction (CreateName $2 $3 $4) $5 }
+    
+RestrictionName:
+    | SYM_LPAREN DottedId                       { $2 }
+
+RestrictionType:
+    | SYM_RPAREN                                { None }
+    | SYM_COLON DottedId SYM_RPAREN             { Some($2) }
+
+RestrictionInitialization:
+    |                                           { None }
+    | SYM_EQUALS JsonValue                      { Some($2 :> obj) }
+
+ProcessComposition:
+    | ProcessReference                          { $1 }
+	| ProcessComposition SYM_BAR ProcessComposition        { CreateProcessComposition $1 $3 }
+
+ProcessReference:
+    | ProcessExtensionContinue                  { $1 }
+    | SYM_DOLLAR DottedId                       { CreateProcessBindingRef $2 }
+
+ProcessExtensionContinue:
+    | ProcessSummation                          { $1 }
+    | CONTINUE                                  { CreateProcessBindingRef "continue" }
+
+ProcessSummation:
+	| Summation									{ CreateProcessSummation $1 }
+	| SYM_LPAREN Process SYM_RPAREN	            { $2 } 
+
+Summation:
+	| SummationSum								{ $1 }
+
+SummationSum:
+	| SummationPrefix							{ $1 }
+	| CHOOSE SummationChoiceList ChooseDefault END { CreateSummationSum ($2 @ $3) }
+    
+SummationChoiceList:
+    | SummationChoice                           { [ $1 ] }
+    | SummationChoice SummationChoiceList       { $1 :: $2 }
+    
+SummationChoice:
+    | WHEN Prefix THEN Process                  { CreateSummationPrefix $2 $4 }
+
+ChooseDefault:
+    |                                           { [] }
+    | DEFAULT Process                           { [ (CreateSummationPrefix (CreatePrefixUnobservable()) $2) ] }
+
+SummationPrefix:
+	| SummationInaction							{ $1 }
+	| Prefix ProcessSummation                   { CreateSummationPrefix $1 $2 }
+
+SummationInaction:
+	| SYM_SEMICOLON								{ CreateSummationInaction() }
+
+Prefix:
+    | PrefixOutput								{ $1 }
+    | PrefixInput								{ $1 }
+	| PrefixMatch								{ $1 }
+
+PrefixOutput:
+    | DottedId SYM_LANGLE ParamList SYM_RANGLE      { CreatePrefixOutput (CreateName $1 None None) $3 }
+
+PrefixInput:
+    | DottedId SYM_LPAREN TypedParamList SYM_RPAREN	{ CreatePrefixInput (CreateName $1 None None) $3 }
+
+PrefixMatch:
+	| SYM_LBRACKET DottedId SYM_EQUALS DottedId SYM_RBRACKET Prefix  { CreatePrefixMatch (CreateName $2 None None) (CreateName $4 None None) $6 }
+
+ParamList:
+    | Param                                     { [ $1 ] }
+    | ParamList SYM_COMMA Param                 { $3 :: $1 }
+
+TypedParamList:
+    | TypedParam                                { [ $1 ] }
+    | TypedParamList SYM_COMMA TypedParam       { $3 :: $1 }
+
+Param:
+    | DottedId                                  { CreateName (String.Intern($1)) None None}
+
+TypedParam:
+    | DottedId SYM_COLON DottedId               { CreateName (String.Intern($1)) (Some($3)) None }
+    | DottedId                                  { CreateName (String.Intern($1)) None None }
+
+DottedId:
+    | ID                                        { $1 }
+    | DottedId SYM_PERIOD ID                    { $1 + "." + $3 }
+
+JsonValue:
+    | JsonString                                { $1 :> obj }
+    | JsonNumber                                { $1 :> obj }
+    | JsonObject                                { $1 :> obj }
+    | JsonArray                                 { $1 :> obj }
+    | JsonBool                                  { $1 :> obj }
+    | JsonNull                                  { $1 :> obj }
+
+JsonString:
+    | JSON_STRING                               { $1 }
+
+JsonNumber:
+    | JSON_INT                                  { int($1) :> obj }
+    | JSON_FLOAT                                { float($1) :> obj }
+
+JsonObject:
+    | SYM_LCURLY JsonMembers SYM_RCURLY         { $2; }
+
+JsonMembers:
+    | JsonPair                                  { [ $1 ] }
+    | JsonPair SYM_COMMA JsonMembers            { $1 :: $3 }
+
+JsonPair:
+    | JSON_STRING SYM_COLON JsonValue           { { Label = $1; Value = $3; } }
+
+JsonArray:
+    | SYM_LBRACKET JsonElements SYM_RBRACKET    { Array.ofList $2 }
+
+JsonElements:
+    | JsonValue                                 { [ $1 ] }
+    | JsonValue SYM_COMMA JsonElements          { $1 :: $3 }
+
+JsonBool:
+    | JSON_BOOL                                 { bool.Parse($1) }
+
+JsonNull:
+    | JSON_NULL                                 { null }
+
