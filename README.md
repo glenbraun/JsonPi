@@ -21,12 +21,12 @@ Above is an example of the most basic and fundamental capability of the pi calcu
 * The identifier 'world' is a pi calculus name which, in this case, is being used as a channel of communication used by two processes, one sending and one receiving
 * The identifier 'hello' is a pi calculus name which is used here as data being sent over the channel 'world'
 * The identifier 'message' is also a pi calculus name used as a handle to whatever data is being received over the channel 'world'
-* The construct channel<name> is read "Send name on channel"
+* The construct channel\<name\> is read "Send name on channel"
 * The construct channel(name) is read "Receive name on channel"
 * The semi-colon ';', is the inactive process which terminates a process
 * The vertical bar '|', separates two processes running in parallel. (JsonPi is single threaded but more on that later.)
 
-The constructs of send and receive ('channel<name>' and 'channel(name)') are called prefixes which can be strung together into a series of consecutive steps. 
+The constructs of send and receive ('channel\<name\>' and 'channel(name)') are called prefixes which can be strung together into a series of consecutive steps. 
 For any process, execution is halted on a prefix until a matching send or receive operation is pending on another process. 
 So, in the example above, a matching send and receive operation is present on the channel 'world' and so execution will progress one more step after the send and receive operations. 
 In this case, the next step for both processes is the inactive process ';', which completes execution.
