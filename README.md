@@ -4,6 +4,7 @@ A Pi Calculus interpreter.
 ## Purpose
 To aid in learning the pi calculus and experiment with the pi calculus model of computation. To learn about the pi calculus see https://en.wikipedia.org/wiki/Π-calculus.
 
+
 ## Description
 JsonPi is designed to interpret programs based on the pi calculus as described in chapter one of the book: "The pi-calculus: a Theory of Mobile Processes" by Davide Sangiorgi and David Walker. 
 The interpreter is currently implemented in F# but designed to be easily ported to other languages. JsonPi programs are represented in JSON so are meant to be easily executed on any platform which supports an interpreter.
@@ -32,6 +33,8 @@ So, in the example above, a matching send and receive operation is present on th
 In this case, the next step for both processes is the inactive process ';', which completes execution.
 
 ## Elements of the JsonPi Language
+The full JsonPi grammar is defined in the lex/yacc files in the source code at [PiLexerInternal.fsl](https://github.com/glenbraun/JsonPi/blob/JsonPi/JsonPiInterpreter/PiLexerInternal.fsl) and [PiParserInternal.fsy](https://github.com/glenbraun/JsonPi/blob/JsonPi/JsonPiInterpreter/PiParserInternal.fsy).
+
 ### Send on a channel
 #### Syntax 
   channel '\<' name [ ',' name] '>'
