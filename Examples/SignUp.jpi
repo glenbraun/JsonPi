@@ -1,0 +1,29 @@
+﻿module TennisServer
+    new (RobinswoodFridayTennis:TennisApi) 
+    (
+        !(RobinswoodFridayTennis(api, params);)
+    )|(
+        !(
+            TennisServer.Signup(player, date, result)
+            RobinswoodFridayTennis<Signup, player, date, result>
+            ;
+        )
+    )
+
+
+using TennisServer
+
+new (Me) = 
+    {
+        "PlayerName" : "Glen" 
+    }
+new (SessionDate) = "2018/4/6"
+
+TennisServer.Signup<Me, SessionDate, return>
+return(result)
+
+choose 
+    when [result=Confirmed]Console<OK> then ;
+    default
+        Console<Error>;
+end
