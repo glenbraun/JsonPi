@@ -83,7 +83,63 @@ type PiNamespace() =
         | None -> 
             ()
 
-let rec internal subpfx (pfx:PiJsonObject) (rn:PiJsonObject) (fn:PiJsonObject) =
+let rec internal exts (s:PiJsonObject) (continuation:PiJsonObject) = 
+    match s with
+    | SummationInaction -> s
+    | SummationPrefix (pfx, p1) -> 
+        CreateSummationPrefix pfx (extp p1 continuation)
+    | SummationSum(ls) -> 
+        let sumlist = ls |> Seq.map (fun s1 -> exts (s1 :?> PiJsonObject) continuation) |> List.ofSeq
+        CreateSummationSum sumlist
+    | _ -> failwith "bad"
+
+and internal extp (p:PiJsonObject) (continuation:PiJsonObject) =
+    match p with
+    | ProcessSummation s -> 
+        CreateProcessSummation (exts s continuation)
+    | ProcessComposition (p1, p2) ->
+        CreateProcessComposition (extp p1 continuation) (extp p2 continuation)
+    | ProcessReplication p1 ->
+        CreateProcessReplication (extp p1 continuation)
+    | ProcessRestriction (n, rp) ->
+        CreateProcessRestriction n (extp rp continuation)
+    | ProcessBinding (id, p1, p2) ->
+        CreateProcessBinding id (extp p1 continuation) (extp p2 continuation)
+    | ProcessBindingRef id -> 
+        if id = "continue" then
+            continuation
+        else 
+            p
+    | ProcessModuleRef (id, inIdOpt, p1) -> 
+        CreateProcessModuleRef id inIdOpt (extp p1 continuation)
+    | _ -> failwith "bad"
+
+and internal extcontinue (p:PiJsonObject) (continuation:PiJsonObject) =
+    extp p continuation
+    
+
+let internal subparams (pa:PiJsonArray) (rn:obj) (fn:obj) = 
+    let fnid =
+        match fn with
+        | PiName(id, _, _) -> id
+        | _ -> failwith "bad"
+
+    seq {
+        for i = 0 to pa.Length - 1 do
+            match pa.[i] with
+            | PiName (nid, _, _) when nid = fnid -> 
+                match rn with
+                | :? PiJsonArray as rna ->
+                    yield! rna
+                | PiName(_,_,_) ->
+                    yield rn
+                | _ -> failwith "bad"
+            | _ as xn -> 
+                yield xn
+    } |> Array.ofSeq
+
+
+let rec internal subpfx (pfx:PiJsonObject) (rn:obj) (fn:obj) =
     match pfx with
     | PrefixInput (c, x)
     | PrefixOutput(c, x) -> 
@@ -92,65 +148,65 @@ let rec internal subpfx (pfx:PiJsonObject) (rn:PiJsonObject) (fn:PiJsonObject) =
             if id = fnid then
                 SetMemberValue pfx "Channel" rn
 
-            let newParams = 
-                x |> Array.map
-                    (function
-                     | PiName (nid, _, _) when nid = fnid -> rn :> obj
-                     | _ as xn -> xn
-                    )
+            let newParams = subparams x rn fn            
             SetMemberValue pfx "Params" newParams
 
         | _ -> failwith "bad"
 
-    | PrefixMatch (n1, n2, p1) -> 
-        match (n1, n2, fn) with
-        | (PiName (nid1, _, _), PiName(nid2, _, _), PiName(fnid, _, _)) ->
-            if nid1 = fnid then
-                SetMemberValue pfx "NameLeft" rn
+    | PrefixMatch (paramsLeft, paramsRight, p1) -> 
+        let newParamsLeft = subparams paramsLeft rn fn
+        let newParamsRight = subparams paramsRight rn fn
 
-            if nid2 = fnid then
-                SetMemberValue pfx "NameRight" rn
+        SetMemberValue pfx "ParamsLeft" (newParamsLeft :> obj)
+        SetMemberValue pfx "ParamsRight" (newParamsRight :> obj)
 
-            subpfx p1 rn fn
-        | _ -> failwith "bad"
+        subpfx p1 rn fn
         
     | PrefixUnobservable -> ()
     | _ -> failwith "bad"
 
-let rec subs s rn fn = 
+let rec subs s rn fn (restriction:bool)  = 
     match s with
     | SummationInaction -> ()
     | SummationPrefix (pfx, p1) -> 
         subpfx pfx rn fn
-        subp p1 rn fn
+        subp p1 rn fn restriction
     | SummationSum(ls) -> 
-        ls |> Array.iter (fun s1 -> subs s1 rn fn)
+        ls |> Array.iter (fun s1 -> subs s1 rn fn restriction)
     | _ -> failwith "bad"
 
-and subp p rn fn =
+and subp p (rn:obj) (fn:obj) (restriction:bool) =
     match p with
     | ProcessSummation s -> 
-        subs s rn fn
+        subs s rn fn restriction
     | ProcessComposition (p1, p2) ->
-        subp p1 rn fn
-        subp p2 rn fn
+        subp p1 rn fn restriction
+        subp p2 rn fn restriction
     | ProcessReplication p1 ->
-        subp p1 rn fn
+        subp p1 rn fn restriction
     | ProcessRestriction (n, rp) ->
         match (n, fn) with
-        | (PiName (id, _, _), PiName(fnid, _, _)) when id = fnid -> 
-            SetMemberValue n "Id" (GetMemberValue rn "Id")
+        | (PiName (id, _, _), PiName(fnid, _, _)) ->
+            if restriction && id = fnid then
+                SetMemberValue n "Id" (GetMemberValue (rn :?> PiJsonObject) "Id")
+                subp rp rn fn restriction
+            elif not(restriction) && id <> fnid then
+                subp rp rn fn restriction
         | _ -> ()
-        subp rp rn fn
     | ProcessBinding (id, p1, p2) ->
-        subp p1 rn fn
-        subp p2 rn fn
+        subp p1 rn fn restriction
+        subp p2 rn fn restriction
     | ProcessBindingRef id -> ()
     | ProcessModuleRef (id, inIdOpt, p1) -> 
-        subp p1 rn fn
+        subp p1 rn fn restriction
     | _ -> failwith "bad"
 
-let rec internal Substitute (p:PiJsonObject) (r:PiJsonArray) (f:PiJsonArray) =
-    for i = 0 to r.Length - 1 do
-        if i < f.Length then
-            subp p (r.[i] :?> PiJsonObject) (f.[i] :?> PiJsonObject)
+let rec internal Substitute (p:PiJsonObject) (r:PiJsonArray) (f:PiJsonArray) (restriction:bool) =
+    for i = 0 to f.Length - 1 do
+        if r.Length > f.Length && i = f.Length - 1 then
+            let ra = Array.sub r i (r.Length - i)
+            subp p ra (f.[i]) restriction
+        else
+            if i < r.Length then
+                subp p (r.[i]) (f.[i]) restriction
+

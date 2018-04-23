@@ -14,9 +14,11 @@ type PiJsonArray = obj array
 
 type PiIdentifier = string
 
-type PiExtension =
-    | OnOutput  of ExtFunc : (PiJsonObject -> PiJsonArray -> PiJsonObject option)
-    | OnInput   of ExtFunc : (PiJsonObject -> PiJsonArray -> PiJsonArray -> PiJsonObject option)
+type IPiExtension =
+    abstract member OnOutput : PiJsonObject -> PiJsonArray -> PiJsonObject option
+    abstract member OnInput : PiJsonObject -> PiJsonArray -> PiJsonArray -> PiJsonObject option
+
+type PiExtensionResolver = (PiIdentifier -> obj option -> IPiExtension option)
 
 let GetMemberValue<'T> (json:PiJsonObject) (label:string) =
     let {Value = value} = json |> List.find ( fun {Label=l} -> l = label)
@@ -34,7 +36,7 @@ let SetMemberValue (json:PiJsonObject) (label:string) (value:obj) =
     | None -> 
         failwith "Member not found"
 
-let CreateName (id:PiIdentifier) (nametype:PiIdentifier option) (data:obj option) =    
+let CreateName (id:PiIdentifier) (nametype:PiIdentifier option) (data:obj option) = 
     match (nametype, data) with
     | (None, None) ->  
         [
@@ -103,7 +105,7 @@ let CreatePrefixInput (channel:PiJsonObject) (typedparamList:PiJsonObject list) 
     [
         { Label="Type"; Value="Prefix.Input" :> obj};
         { Label="Channel"; Value=channel :> obj};
-        { Label="Params"; Value= typedparamArray :> obj};
+        { Label="Params"; Value=typedparamArray :> obj};
     ];
 
 let (|PrefixInput|_|) (data:obj) =
@@ -114,11 +116,13 @@ let (|PrefixInput|_|) (data:obj) =
         | _ -> None
     | _ -> None
 
-let CreatePrefixMatch (n1:PiJsonObject) (n2:PiJsonObject) (prefix:PiJsonObject) =
+let CreatePrefixMatch (leftParams:PiJsonObject list) (rightParams:PiJsonObject list) (prefix:PiJsonObject) =
+    let leftParamArray = leftParams |> List.map (fun p -> p :> obj) |> List.toArray
+    let rightParamArray = rightParams |> List.map (fun p -> p :> obj) |> List.toArray
     [
         { Label="Type"; Value="Prefix.Match" :> obj};
-        { Label="NameLeft"; Value=n1 :> obj};
-        { Label="NameRight"; Value=n2 :> obj};
+        { Label="ParamsLeft"; Value=leftParamArray :> obj};
+        { Label="ParamsRight"; Value=rightParamArray :> obj};
         { Label="Prefix"; Value=prefix :> obj};
     ];
 
@@ -126,7 +130,7 @@ let (|PrefixMatch|_|) (data:obj) =
     match data with
     | :? PiJsonObject as json ->
         match GetMemberValue<string> json "Type" with
-        | "Prefix.Match" -> Some( (GetMemberValue<PiJsonObject> json "NameLeft", GetMemberValue<PiJsonObject> json "NameRight", GetMemberValue<PiJsonObject> json "Prefix") )
+        | "Prefix.Match" -> Some( (GetMemberValue<PiJsonArray> json "ParamsLeft", GetMemberValue<PiJsonArray> json "ParamsRight", GetMemberValue<PiJsonObject> json "Prefix") )
         | _ -> None
     | _ -> None
 

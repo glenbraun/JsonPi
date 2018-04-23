@@ -137,13 +137,13 @@ Prefix:
 	| PrefixMatch								{ $1 }
 
 PrefixOutput:
-    | DottedId SYM_LANGLE ParamList SYM_RANGLE      { CreatePrefixOutput (CreateName $1 None None) $3 }
+    | DottedId SYM_LANGLE ParamList SYM_RANGLE      { CreatePrefixOutput (CreateName $1 None None) (List.rev $3) }
 
 PrefixInput:
-    | DottedId SYM_LPAREN TypedParamList SYM_RPAREN	{ CreatePrefixInput (CreateName $1 None None) $3 }
+    | DottedId SYM_LPAREN TypedParamList SYM_RPAREN	{ CreatePrefixInput (CreateName $1 None None) (List.rev $3) }
 
 PrefixMatch:
-	| SYM_LBRACKET DottedId SYM_EQUALS DottedId SYM_RBRACKET Prefix  { CreatePrefixMatch (CreateName $2 None None) (CreateName $4 None None) $6 }
+	| SYM_LBRACKET ParamList SYM_EQUALS ParamList SYM_RBRACKET Prefix  { CreatePrefixMatch (List.rev $2) (List.rev $4) $6 }
 
 ParamList:
     | Param                                     { [ $1 ] }

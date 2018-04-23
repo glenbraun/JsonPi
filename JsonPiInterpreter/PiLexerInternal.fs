@@ -408,7 +408,7 @@ and _fslex_pi  _fslex_state lexbuf =
           )
   | 27 -> ( 
 # 64 "PiLexerInternal.fsl"
-                                 PiParserInternal.JSON_STRING(lexeme lexbuf) 
+                                 PiParserInternal.JSON_STRING(let s = lexeme lexbuf in (s.Substring(1, s.Length-2))) 
 # 412 "PiLexerInternal.fs"
           )
   | 28 -> ( 

@@ -12,12 +12,12 @@ type PiTestCase =
                                    Code : string
     | AsStringWithExtensions    of Name : string *
                                    Code : string *
-                                   (PiIdentifier * PiExtension) list
+                                   Resolver : PiExtensionResolver
     | AsFile                    of Name : string *
                                    Path : string
     | AsFileWithExtensions      of Name : string *
                                    Path : string  *
-                                   (PiIdentifier * PiExtension) list
+                                   Resolver : PiExtensionResolver
 
 type PiTestResult =
     | Unknown
@@ -73,7 +73,15 @@ type PiTestModule (path:string, cases:PiTestCase list) =
             sw.WriteLine(")")
 
     let GenerateTestCase (sw:StreamWriter) (test:PiTestCase) =
-        let pp = PiProcessor()
+        let pp = 
+            match test with
+            | PiTestCase.AsFile(_) 
+            | PiTestCase.AsString(_) ->
+                PiProcessor()
+            | PiTestCase.AsFileWithExtensions(_, _, resolver)
+            | PiTestCase.AsStringWithExtensions(_, _, resolver) ->
+                PiProcessor(Some(resolver))
+
         use subscription =  pp.AsObservable() |> Observable.subscribe (PrintPiEvent sw)
         
         match test with
@@ -85,7 +93,15 @@ type PiTestModule (path:string, cases:PiTestCase list) =
 
             Printf.fprintfn sw "        ]"
             Printf.fprintfn sw ""
-        | _ -> ()
+        | PiTestCase.AsFile(name, file)
+        | PiTestCase.AsFileWithExtensions(name, file, _) ->
+            Printf.fprintfn sw "    let %s_Observations = [" name
+
+            pp.RunFile(file)
+
+            Printf.fprintfn sw "        ]"
+            Printf.fprintfn sw ""
+            
 
     let GenerateTestMatch (sw:StreamWriter) (test:PiTestCase) =
         match test with
@@ -128,18 +144,21 @@ type PiTestModule (path:string, cases:PiTestCase list) =
         let addevent () (ev:PiTraceEvent) = 
             events <- ev :: events
 
-        let pp = PiProcessor()
+        let resolver =
+            match test with
+            | PiTestCase.AsStringWithExtensions(_, _, r) 
+            | PiTestCase.AsFileWithExtensions(_, _, r) -> Some(r)
+            | _ -> None
+
+        let pp = PiProcessor(resolver)
         let subscription =  
             pp.AsObservable() 
                 |> Observable.scan addevent ()
                 |> Observable.subscribe (fun () -> ())
 
         match test with 
-        | PiTestCase.AsString(n, code) -> 
-            pp.RunString(code)
-        | PiTestCase.AsStringWithExtensions(n, code, extlist) ->
-            extlist |>
-                List.iter (fun (exttype, ext) -> pp.AddExtension(exttype, ext))
+        | PiTestCase.AsString(n, code) 
+        | PiTestCase.AsStringWithExtensions(n, code, _) ->
             pp.RunString(code)
         | _ -> failwith "unexpected"
 
@@ -184,8 +203,10 @@ type PiTestModule (path:string, cases:PiTestCase list) =
         let test = 
             cases |> List.find 
                 (function 
-                 | PiTestCase.AsString(n, _) when n = name -> true         
-                 | PiTestCase.AsFile(n, _) when n = name -> true
+                 | PiTestCase.AsString(n, _) 
+                 | PiTestCase.AsStringWithExtensions(n, _, _)
+                 | PiTestCase.AsFile(n, _) 
+                 | PiTestCase.AsFileWithExtensions(n, _, _) when n = name -> true
                  | _ -> false
                 )
 

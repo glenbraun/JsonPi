@@ -61,7 +61,7 @@ rule pi = parse
 | "]"           { PiParserInternal.SYM_RBRACKET }
 | "{"           { PiParserInternal.SYM_LCURLY }
 | "}"           { PiParserInternal.SYM_RCURLY }
-| json_string   { PiParserInternal.JSON_STRING(lexeme lexbuf) }
+| json_string   { PiParserInternal.JSON_STRING(let s = lexeme lexbuf in (s.Substring(1, s.Length-2))) }
 | json_int      { PiParserInternal.JSON_INT(lexeme lexbuf) }
 | json_float    { PiParserInternal.JSON_FLOAT(lexeme lexbuf) }
 | json_bool     { PiParserInternal.JSON_BOOL(lexeme lexbuf) }

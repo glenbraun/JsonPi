@@ -7,9 +7,8 @@ open JsonPi.Data
 open JsonPi.PiRuntime
 
 
-type PiProcessor () =
-    let mutable outExtensions = Map.empty<PiIdentifier, PiExtension>
-    let mutable inpExtensions = Map.empty<PiIdentifier, PiExtension>
+type PiProcessor (resolver:PiExtensionResolver option) =
+    let mutable extensions = Map.empty<PiIdentifier, IPiExtension>
     let pitrace = PiObservable<PiTraceEvent>()
     let assemblies = ResizeArray<PiJsonObject>()
     let ws = Stack<PiContext>()
@@ -44,9 +43,18 @@ type PiProcessor () =
                 TransitionContext.NoTransition
             | Some(matchedOutput) ->
                 TransitionContext.ChannelMatch(matchedOutput, guard)
-        | PrefixMatch (np1, np2, matchPfx) ->
-            match (np1, np2) with
-            | (PiName(id1, _, _), PiName(id2, _, _)) when id1 = id2 ->
+        | PrefixMatch (paramsLeft, paramsRight, matchPfx) ->
+            let isMatch =
+                (paramsLeft.Length = paramsRight.Length) &&
+                (Array.forall2
+                    (fun np1 np2 ->
+                        match (np1, np2) with
+                        | (PiName(id1, _, _), PiName(id2, _, _)) -> id1 = id2
+                        | _ -> false
+                    )
+                    paramsLeft paramsRight)
+
+            if isMatch then
                 let matchGuard = 
                     { 
                         CurrentContext  = guard.CurrentContext;
@@ -54,7 +62,7 @@ type PiProcessor () =
                         Continuation    = guard.Continuation
                     }
                 MatchSummationPrefix matchGuard
-            | _ ->
+            else
                 TransitionContext.NoTransition
         | PrefixUnobservable ->
             TransitionContext.Unobservable(guard)
@@ -128,10 +136,25 @@ type PiProcessor () =
                 failwith "unable to find module"
         | ProcessRestriction (name, continuation) ->
             let id = GetMemberValue name "Id"
-            let findName = CreateName id None None
             let restrictedId = GetNextRestrictedId id
+
+            let nameType = TryGetMemberValue name "NameType"
+            let data = TryGetMemberValue name "Data"
+
+            match (nameType, resolver) with
+            | (Some(nt), Some(r)) ->
+                match r nt data with
+                | Some(ext) ->
+                    if Map.containsKey restrictedId extensions then
+                        extensions <- Map.remove restrictedId extensions
+
+                    extensions <- Map.add restrictedId ext extensions
+                | None -> ()
+            | _ -> ()
+
+            let findName = CreateName id None None
             let restrictedName = CreateName restrictedId (TryGetMemberValue name "NameType") (TryGetMemberValue name "Data")
-            Substitute context.CurrentProcess [| restrictedName :> obj |] [| findName :> obj |]
+            Substitute context.CurrentProcess [| restrictedName :> obj |] [| findName :> obj |] true
             context.NextChild(continuation)
             PushProcess context
             TransitionContext.NoTransition
@@ -149,16 +172,15 @@ type PiProcessor () =
         | PiName (id, nameTypeOpt, _) ->
             match nameTypeOpt with
             | Some(nt) -> 
-                match outExtensions |> Map.tryFind nt with
-                | Some(PiExtension.OnOutput(fExtOut)) -> 
-                    let extResult = fExtOut channel outNames
-                    match extResult with
-                    | Some(extContinuation) ->
-                        // TODO: let continue ...
-                        context.NextProcess(extContinuation)
+                match Map.tryFind id extensions with
+                | Some(ext) ->
+                    let result = ext.OnOutput channel outNames
+                    match result with
+                    | Some(extProcess) ->
+                        context.NextProcess(extcontinue extProcess continuation)
                     | None ->
                         context.NextProcess(continuation)
-                | _ ->
+                | None ->
                     context.NextProcess(continuation)
             | None ->
                 context.NextProcess(continuation)
@@ -171,22 +193,21 @@ type PiProcessor () =
         | PiName (id, nameTypeOpt, _) ->
             match nameTypeOpt with
             | Some(nt) -> 
-                match inpExtensions |> Map.tryFind nt with
-                | Some(PiExtension.OnInput(fExtInp)) -> 
-                    let extResult = fExtInp channel outNames inpNames
-                    match extResult with
-                    | Some(extContinuation) ->
-                        // TODO: let continue ...
-                        context.NextProcess(extContinuation)
+                match Map.tryFind id extensions with
+                | Some(ext) ->
+                    let result = ext.OnInput channel outNames inpNames
+                    match result with
+                    | Some(extProcess) ->
+                        context.NextProcess(extcontinue extProcess continuation)
                     | None ->
                         context.NextProcess(continuation)
-                | _ ->
+                | None ->
                     context.NextProcess(continuation)
             | None ->
                 context.NextProcess(continuation)
         | _ -> failwith "bad"
 
-        Substitute (context.CurrentProcess) outNames inpNames
+        Substitute (context.CurrentProcess) outNames inpNames false
 
     let TransitionTau (context:PiContext) (continuation:PiJsonObject) =
         pitrace.Next(PiTraceEvent.TransitionTau)
@@ -218,7 +239,7 @@ type PiProcessor () =
         | _ ->
             pitrace.Next(PiTraceEvent.TransitionRep("Continuation"))
             let left = CloneJson repProc
-            let right = continuation
+            let right = context.CurrentProcess
             let comp = CreateProcessComposition left right
             context.NextProcess(comp)
 
@@ -351,6 +372,8 @@ type PiProcessor () =
                 PushProcess (guard.CurrentContext)
             | _ -> failwith "Unexpexted transition context."
 
+    new() = PiProcessor(None)
+
     member internal this.RunStack () =
         match ws.Count with
         | 0 ->
@@ -361,8 +384,7 @@ type PiProcessor () =
             TransitionProcess tcl
             this.RunStack()
 
-    member this.RunString(pitext:string) =
-        let program = PiParser.ParseFromString pitext
+    member this.RunProgram(program:PiJsonObject) =
         AddAssembly program
 
         match program with
@@ -373,19 +395,12 @@ type PiProcessor () =
 
         this.RunStack()
 
-    member this.AddExtension(nameType:PiIdentifier, extension:PiExtension) =
-        match extension with
-        | PiExtension.OnOutput(_) ->
-            match Map.containsKey nameType outExtensions with
-            | false ->
-                outExtensions <- Map.add nameType extension outExtensions
-            | true ->
-                outExtensions <- Map.add nameType extension (Map.remove nameType outExtensions)
-        | PiExtension.OnInput(_) ->
-            match Map.containsKey nameType inpExtensions with
-            | false ->
-                inpExtensions <- Map.add nameType extension inpExtensions
-            | true ->
-                inpExtensions <- Map.add nameType extension (Map.remove nameType inpExtensions)
+    member this.RunString(pitext:string) =
+        let program = PiParser.ParseFromString pitext
+        this.RunProgram(program)
+
+    member this.RunFile(filename:string) =
+        let program = PiParser.ParseFromFile filename
+        this.RunProgram(program)
 
     member this.AsObservable() = pitrace.AsObservable

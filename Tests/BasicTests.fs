@@ -38,6 +38,131 @@ type BasicTests () =
             PiTraceEvent.RunProcess("Process.Summation")
         ]
 
+    let TestSimpleCommMultiParam2to2_Observations = [
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="g";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="m";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="n";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+        ]
+
+    let TestSimpleCommMultiParam2To1_Observations = [
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="m";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="n";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+        ]
+
+    let TestSimpleCommMultiParam3To2_Observations = [
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="c";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="c";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="g";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="b";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="c";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="b";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="c";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="m";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="n";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+        ]
+
+    let TestSimpleCommMultiParam1To2_Observations = [
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="g";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="g";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="g";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="m";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="n";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+        ]
+
+    let TestSimpleCommMultiParam2To3_Observations = [
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="g";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="h";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="h";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="h";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="m";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="n";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="o";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+        ]
+
     let TestMultiComm_Observations = [
             PiTraceEvent.PushProcess("Process.Composition")
             PiTraceEvent.RunProcess("Process.Composition")
@@ -138,6 +263,27 @@ type BasicTests () =
             PiTraceEvent.PushProcess("Process.Summation")
             PiTraceEvent.PushProcess("Process.Summation")
             PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+        ]
+
+    let TestCommWithMatchMultipleParams_Observations = [
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};] :> obj;[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="g";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="g";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="c";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
             PiTraceEvent.RunProcess("Process.Summation")
             PiTraceEvent.RunProcess("Process.Summation")
         ]
@@ -441,6 +587,35 @@ type BasicTests () =
             PiTraceEvent.RunProcess("Process.Summation")
         ]
 
+    let TestRestrictionWithSubstitute_Observations = [
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="x";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="a";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Restriction")
+            PiTraceEvent.RunProcess("Process.Restriction")
+            PiTraceEvent.PushProcess("Process.Restriction")
+            PiTraceEvent.RunProcess("Process.Restriction")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f`2";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="y";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="f`2";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="b";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+        ]
+
     let TestSimpleRestrictionWithExtension_Observations = [
             PiTraceEvent.PushProcess("Process.Restriction")
             PiTraceEvent.RunProcess("Process.Restriction")
@@ -469,8 +644,39 @@ type BasicTests () =
             PiTraceEvent.PushProcess("Process.Summation")
             PiTraceEvent.RunProcess("Process.Summation")
             PiTraceEvent.RunProcess("Process.Summation")
-            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="a`1";};{Label="NameType";Value="MyExtension";};{Label="Data";Value=[|true :> obj;5 :> obj;-12 :> obj;1.2093 :> obj;-93.5 :> obj;18001000 :> obj;-3.918001E-05 :> obj;[{Label="\"TestLabel\"";Value="\"TestValue\"";};]:>obj|];};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="x";};]:>obj|])
-            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="a`1";};{Label="NameType";Value="MyExtension";};{Label="Data";Value=[|true :> obj;5 :> obj;-12 :> obj;1.2093 :> obj;-93.5 :> obj;18001000 :> obj;-3.918001E-05 :> obj;[{Label="\"TestLabel\"";Value="\"TestValue\"";};]:>obj|];};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="x";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="y";};]:>obj|])
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="a`1";};{Label="NameType";Value="MyExtension";};{Label="Data";Value=[|true :> obj;5 :> obj;-12 :> obj;1.2093 :> obj;-93.5 :> obj;18001000 :> obj;-3.918001E-05 :> obj;[{Label="TestLabel";Value="TestValue";};]:>obj|];};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="x";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="a`1";};{Label="NameType";Value="MyExtension";};{Label="Data";Value=[|true :> obj;5 :> obj;-12 :> obj;1.2093 :> obj;-93.5 :> obj;18001000 :> obj;-3.918001E-05 :> obj;[{Label="TestLabel";Value="TestValue";};]:>obj|];};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="x";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="y";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+        ]
+
+    let TestSimpleRestrictionWithExtensionReturn_Observations = [
+            PiTraceEvent.PushProcess("Process.Restriction")
+            PiTraceEvent.RunProcess("Process.Restriction")
+            PiTraceEvent.PushProcess("Process.Restriction")
+            PiTraceEvent.RunProcess("Process.Restriction")
+            PiTraceEvent.PushProcess("Process.Composition")
+            PiTraceEvent.RunProcess("Process.Composition")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="ex`2";};{Label="NameType";Value="MyExtension";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="y";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="ex`2";};{Label="NameType";Value="MyExtension";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="y";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="x";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="b";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="y";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="b";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="y";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="g";};]:>obj|])
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.PushProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.RunProcess("Process.Summation")
+            PiTraceEvent.TransitionOut([{Label="Type";Value="PiName";};{Label="Id";Value="c";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="y";};]:>obj|])
+            PiTraceEvent.TransitionInp([{Label="Type";Value="PiName";};{Label="Id";Value="c";};],[|[{Label="Type";Value="PiName";};{Label="Id";Value="y";};]:>obj|],[|[{Label="Type";Value="PiName";};{Label="Id";Value="h";};]:>obj|])
             PiTraceEvent.PushProcess("Process.Summation")
             PiTraceEvent.PushProcess("Process.Summation")
             PiTraceEvent.RunProcess("Process.Summation")
@@ -555,10 +761,16 @@ type BasicTests () =
             | "TestInaction" -> TestInaction_Observations
             | "TestComposeInaction" -> TestComposeInaction_Observations
             | "TestSimpleComm" -> TestSimpleComm_Observations
+            | "TestSimpleCommMultiParam2to2" -> TestSimpleCommMultiParam2to2_Observations
+            | "TestSimpleCommMultiParam2To1" -> TestSimpleCommMultiParam2To1_Observations
+            | "TestSimpleCommMultiParam3To2" -> TestSimpleCommMultiParam3To2_Observations
+            | "TestSimpleCommMultiParam1To2" -> TestSimpleCommMultiParam1To2_Observations
+            | "TestSimpleCommMultiParam2To3" -> TestSimpleCommMultiParam2To3_Observations
             | "TestMultiComm" -> TestMultiComm_Observations
             | "TestSummationComposition" -> TestSummationComposition_Observations
             | "TestCommWithSimpleMatch" -> TestCommWithSimpleMatch_Observations
             | "TestCommWithMatch" -> TestCommWithMatch_Observations
+            | "TestCommWithMatchMultipleParams" -> TestCommWithMatchMultipleParams_Observations
             | "TestLeftSumOut" -> TestLeftSumOut_Observations
             | "TestRightSumOut" -> TestRightSumOut_Observations
             | "TestLeftSumInp" -> TestLeftSumInp_Observations
@@ -574,8 +786,10 @@ type BasicTests () =
             | "TestModuleRefAndBindingRef" -> TestModuleRefAndBindingRef_Observations
             | "TestModuleRefAndBindingRef2" -> TestModuleRefAndBindingRef2_Observations
             | "TestSimpleRestriction" -> TestSimpleRestriction_Observations
+            | "TestRestrictionWithSubstitute" -> TestRestrictionWithSubstitute_Observations
             | "TestSimpleRestrictionWithExtension" -> TestSimpleRestrictionWithExtension_Observations
             | "TestSimpleRestrictionWithExtensionAndJson" -> TestSimpleRestrictionWithExtensionAndJson_Observations
+            | "TestSimpleRestrictionWithExtensionReturn" -> TestSimpleRestrictionWithExtensionReturn_Observations
             | "TestSimpleReplication" -> TestSimpleReplication_Observations
             | "TestReplication" -> TestReplication_Observations
             | _ -> failwith "unexpected"
