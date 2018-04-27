@@ -240,19 +240,19 @@ You can build your own binaries using VS 2017 or install the F# compiler and .Ne
 I've confirmed they work on Windows but not yet on other platforms.
 REPL Binaries are checked in under REPLBinaries.
 
-###Steps for building manually (pseudo code below)
+### Steps for building manually (pseudo code below)
 1. Clone or copy this repo
 2. ```cd FsLexYacc.Runtime```
 3. ```fsc --target:library -o:FsLexYacc.Runtime.dll Lexing.fs Parsing.fs```
-4. ```cd JsonPiInterpreter```
-5. ```cp FsLexYacc.Runtime/FsLexYacc.Runtime.dll```   (built in step 3)
+4. ```cd ../JsonPiInterpreter```
+5. ```cp ../FsLexYacc.Runtime/FsLexYacc.Runtime.dll .```   (built in step 3)
 6. ```fsc --target:library -o:JsonPiInterpreter.dll -r:FsLexYacc.Runtime.dll AssemblyInfo.fs PiJsonData.fs PiParserInternal.fs PiLexerInternal.fs PiParser.fs PiRuntime.fs PiTrace.fs PiProcessor.fs```
-7. ```cd JsonPiREPL```
-8. ```cp FsLexYacc.Runtime/FsLexYacc.Runtime.dll```   (built in step 3)
-9. ```cp JsonPiInterpreter/JsonPiInterpreter.dll```   (built in step 6)
-10. ```fsc -r:FsLExYacc.Runtime.dll -r JsonPiInterpreter.dll -o:JsonPiREPL.dll PiRepl.fs PiReplParser.fs PiReplLexer.fs Program.fs```
+7. ```cd ../JsonPiREPL```
+8. ```cp ../FsLexYacc.Runtime/FsLexYacc.Runtime.dll .```   (built in step 3)
+9. ```cp ../JsonPiInterpreter/JsonPiInterpreter.dll .```   (built in step 6)
+10. ```fsc -r:FsLexYacc.Runtime.dll -r JsonPiInterpreter.dll -o:JsonPiREPL.exe PiRepl.fs PiReplParser.fs PiReplLexer.fs Program.fs```
 11. Create a file called ```JsonPiREPL.runtimeconfig.json``` and put this in it:
-
+```
     {
       "runtimeOptions": {
         "tfm": "netcoreapp2.0",
@@ -262,7 +262,8 @@ REPL Binaries are checked in under REPLBinaries.
         }
       }
     }
-12. To run, ```dotnet JsonPiREPL.dll```
+```
+12. To run, ```dotnet JsonPiREPL.exe```
 
 You should see "Run>". Type :h for help, :q to quit.
 
