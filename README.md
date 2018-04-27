@@ -237,7 +237,8 @@ Some thought has been given to a future enhancement of making the PiNamespace ty
 ## Running the REPL
 JsonPi runs on .Net Core so it should run on other platforms than Windows. I haven't tested this yet. 
 You can build your own binaries using VS 2017 or install the F# compiler and .Net Core and try these steps below. 
-I've confirmed they work on Windows but not yet on other platforms. I also plan to check-in some binaries.
+I've confirmed they work on Windows but not yet on other platforms.
+REPL Binaries are checked in under REPLBinaries.
 
 ###Steps for building manually (pseudo code below)
 1. Clone or copy this repo
