@@ -234,4 +234,46 @@ Even though pi calculus is meant for modeling concurrent processes, the JsonPi i
 This was done intentionally to simplify the implementation and to provide a repeatable execution to aid in understanding and learning the pi calculus.
 Some thought has been given to a future enhancement of making the PiNamespace type threadsafe and alowing it to be shared across PiProcessor instances which would provide for multiple threads of execution.
 
+## Running the REPL
+JsonPi runs on .Net Core so it should run on other platforms than Windows. I haven't tested this yet. 
+You can build your own binaries using VS 2017 or install the F# compiler and .Net Core and try these steps below. 
+I've confirmed they work on Windows but not yet on other platforms. I also plan to check-in some binaries.
+
+###Steps for building manually (pseudo code below)
+1. Clone or copy this repo
+2. ```cd FsLexYacc.Runtime```
+3. ```fsc --target:library -o:FsLexYacc.Runtime.dll Lexing.fs Parsing.fs```
+4. ```cd JsonPiInterpreter```
+5. ```cp FsLexYacc.Runtime/FsLexYacc.Runtime.dll```   (built in step 3)
+6. ```fsc --target:library -o:JsonPiInterpreter.dll -r:FsLexYacc.Runtime.dll AssemblyInfo.fs PiJsonData.fs PiParserInternal.fs PiLexerInternal.fs PiParser.fs PiRuntime.fs PiTrace.fs PiProcessor.fs```
+7. ```cd JsonPiREPL```
+8. ```cp FsLexYacc.Runtime/FsLexYacc.Runtime.dll```   (built in step 3)
+9. ```cp JsonPiInterpreter/JsonPiInterpreter.dll```   (built in step 6)
+10. ```fsc -r:FsLExYacc.Runtime.dll -r JsonPiInterpreter.dll -o:JsonPiREPL.dll PiRepl.fs PiReplParser.fs PiReplLexer.fs Program.fs```
+11. Create a file called ```JsonPiREPL.runtimeconfig.json``` and put this in it:
+
+    {
+      "runtimeOptions": {
+        "tfm": "netcoreapp2.0",
+        "framework": {
+          "name": "Microsoft.NETCore.App",
+          "version": "2.0.0"
+        }
+      }
+    }
+12. To run, ```dotnet JsonPiREPL.dll```
+
+You should see "Run>". Type :h for help, :q to quit.
+
+I'll look into a Fake build or some other, better process to build across platforms. 
+
+## Known Issues
+1. No friendly parser errors. Any error in parsing results in an exception thrown with very little indication of what the issue is. 
+   Sorry, I know this can be maddening. When in doubt, add parenthesis around processes, and don't forget the termination process (;) at the end of processes.
+   The Tests folder has many examples which all parse and run, starting with these can help get the right syntax.
+
+2. Let bindings don't work in the REPL. They probably do work in multiline mode but not across executions.
+
+3. Commands don't work between steps in step mode. You can't run a few steps then enter :l, for example. 
+   You have to wait for the execution to complete. 
 
