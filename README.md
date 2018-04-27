@@ -42,7 +42,7 @@ The full JsonPi grammar is defined in the lex/yacc files in the source code at [
   channel '\<' name [ ',' name] '>'
 #### Example
 ```
-  x<a,b,c>
+  x<a,b,c>;
 ```
 #### Description
 The names 'a', 'b' and 'c' are being sent on the channel 'x'. 
@@ -54,7 +54,7 @@ All other processes are free to execute.
   channel '(' name [ ',' name] ')'
 #### Example
 ```
-  x(f,g,h)
+  x(f,g,h);
 ```
 #### Description.
 The names 'f', 'g' and 'h' are used as placeholders for data to be received over the channel 'x'. 
@@ -278,4 +278,3 @@ I'll look into a Fake build or some other, better process to build across platfo
 
 3. Commands don't work between steps in step mode. You can't run a few steps then enter :l, for example. 
    You have to wait for the execution to complete. 
-
