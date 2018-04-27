@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="PiRepl.fs" />
+    <None Include="PiReplParser.fsy" />
+    <None Include="PiReplLexer.fsl" />
+    <Compile Include="PiReplParser.fs" />
+    <Compile Include="PiReplLexer.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FsLexYacc.Runtime\FsLexYacc.Runtime.fsproj" />
+    <ProjectReference Include="..\JsonPiInterpreter\JsonPiInterpreter.fsproj" />
+  </ItemGroup>
+
+</Project>

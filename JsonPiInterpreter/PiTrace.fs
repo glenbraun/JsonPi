@@ -7,13 +7,19 @@ open JsonPi
 open JsonPi.Data
 
 type PiTraceEvent =
-    | PushProcess       of ProcessType:string
-    | RunProcess        of ProcessType:string
+    | PushProcess       of Process:PiJsonObject
+    | RunProcess        of Process:PiJsonObject
+    | PutPrefix         of Prefix:PiJsonObject *
+                           Continuation:PiJsonObject
+    | GetPrefix         of Prefix:PiJsonObject *
+                           Continuation:PiJsonObject
     | TransitionOut     of Channel:PiJsonObject *
-                           OutNames:PiJsonArray
+                           OutNames:PiJsonArray *
+                           Continuation:PiJsonObject
     | TransitionInp     of Channel:PiJsonObject *
                            OutNames:PiJsonArray *
-                           InpNames:PiJsonArray
+                           InpNames:PiJsonArray *
+                           Continuation:PiJsonObject
     | TransitionSum     of Summation:PiJsonObject *
                            WhenPfx:PiJsonObject
     | TransitionTau
@@ -70,6 +76,7 @@ type PiObservable<'T>() =
         Debug.Assert(not finished, "IObserver is already finished")
         finished <- true
         completed()
+        finished <- false
 
     [<Conditional("DEBUG")>]
     member this.Error(err) =

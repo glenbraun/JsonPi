@@ -33,28 +33,40 @@ type PiTestModule (path:string, cases:PiTestCase list) =
         let fsw = PiFSharpWriter(sw)
 
         match ev with
-        | PiTraceEvent.PushProcess(processType) ->
-            sw.Write("            PiTraceEvent.PushProcess(")
-            fsw.Write(processType)
+        | PiTraceEvent.PushProcess(p) ->
+            sw.Write("            PiTraceEvent.PushProcess([]")
+            //fsw.Write(p)
             sw.WriteLine(")")
-        | PiTraceEvent.RunProcess(processType) ->
-            sw.Write("            PiTraceEvent.RunProcess(")
-            fsw.Write(processType)
+        | PiTraceEvent.RunProcess(p) ->
+            sw.Write("            PiTraceEvent.RunProcess([]")
+            //fsw.Write(p)
             sw.WriteLine(")")
-        | PiTraceEvent.TransitionOut(channel, outNames) ->
+        | PiTraceEvent.PutPrefix(pfx, continuation) ->
+            sw.Write("            PiTraceEvent.PutPrefix(")
+            fsw.Write(pfx)
+            sw.Write(",[]")
+            //fsw.Write(continuation)
+            sw.WriteLine(")")
+        | PiTraceEvent.GetPrefix(pfx, continuation) ->
+            sw.Write("            PiTraceEvent.GetPrefix(")
+            fsw.Write(pfx)
+            sw.Write(",[]")
+            //fsw.Write(continuation)
+            sw.WriteLine(")")
+        | PiTraceEvent.TransitionOut(channel, outNames, _) ->
             sw.Write("            PiTraceEvent.TransitionOut(")
             fsw.Write(channel)
             sw.Write(",")
             fsw.Write(outNames)
-            sw.WriteLine(")")
-        | PiTraceEvent.TransitionInp(channel, outNames, inpNames) ->
+            sw.WriteLine(", [])")
+        | PiTraceEvent.TransitionInp(channel, outNames, inpNames, _) ->
             sw.Write("            PiTraceEvent.TransitionInp(")
             fsw.Write(channel)
             sw.Write(",")
             fsw.Write(outNames)
             sw.Write(",")
             fsw.Write(inpNames)
-            sw.WriteLine(")")
+            sw.WriteLine(", [])")
         | PiTraceEvent.TransitionSum(summation, whenPfx) ->
             sw.Write("            PiTraceEvent.TransitionSum(")
             fsw.Write(summation)

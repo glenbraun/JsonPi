@@ -8,6 +8,7 @@ open JsonPi.PiRuntime
 
 
 type PiProcessor (resolver:PiExtensionResolver option) =
+    let mutable restrictedNames = Map.empty<PiIdentifier, int>
     let mutable extensions = Map.empty<PiIdentifier, IPiExtension>
     let pitrace = PiObservable<PiTraceEvent>()
     let assemblies = ResizeArray<PiJsonObject>()
@@ -15,18 +16,28 @@ type PiProcessor (resolver:PiExtensionResolver option) =
     let pns = PiNamespace()
 
     let rec GetNextRestrictedId (id:PiIdentifier) =
+        let num = 
+            match restrictedNames.ContainsKey(id) with
+            | false -> 
+                restrictedNames <- Map.add id 1 restrictedNames
+                1
+            | true ->
+                let n = restrictedNames.[id] + 1
+                restrictedNames <- Map.remove id restrictedNames
+                restrictedNames <- Map.add id n restrictedNames
+                n
+
         match id.IndexOf("`") with
-        | -1 -> String.Intern(id + "`1")
+        | -1 -> String.Intern(sprintf "%s`%d" id num)
         | index -> 
-            let num = Int32.Parse(id.Substring(index+1))
-            sprintf "%s`%d" (id.Substring(0, index)) (num+1)
+            String.Intern(sprintf "%s`%d" (id.Substring(0, index)) num)
 
     let AddAssembly asm = 
         if not(Seq.exists ((=) asm) (assemblies)) then
             assemblies.Add asm
 
     let PushProcess (context:PiContext) =
-        pitrace.Next(PiTraceEvent.PushProcess(GetMemberValue<string> (context.CurrentProcess) "Type"))
+        pitrace.Next(PiTraceEvent.PushProcess(context.CurrentProcess))
         ws.Push(context)
 
     let rec MatchSummationPrefix (guard:GuardedContext) = 
@@ -34,14 +45,18 @@ type PiProcessor (resolver:PiExtensionResolver option) =
         | PrefixOutput (channel, outNames) ->
             match pns.TrySend(channel, guard) with
             | None ->
+                pitrace.Next(PiTraceEvent.PutPrefix(guard.Prefix, guard.Continuation))
                 TransitionContext.NoTransition
             | Some(matchedInput) ->
+                pitrace.Next(PiTraceEvent.GetPrefix(matchedInput.Prefix, matchedInput.Continuation))
                 TransitionContext.ChannelMatch(guard, matchedInput)
         | PrefixInput (channel, inNames) ->
             match pns.TryReceive(channel, guard) with
             | None ->
+                pitrace.Next(PiTraceEvent.PutPrefix(guard.Prefix, guard.Continuation))
                 TransitionContext.NoTransition
             | Some(matchedOutput) ->
+                pitrace.Next(PiTraceEvent.GetPrefix(matchedOutput.Prefix, matchedOutput.Continuation))
                 TransitionContext.ChannelMatch(matchedOutput, guard)
         | PrefixMatch (paramsLeft, paramsRight, matchPfx) ->
             let isMatch =
@@ -88,7 +103,7 @@ type PiProcessor (resolver:PiExtensionResolver option) =
             TransitionContext.NoTransition
 
     let rec RunProcess (context:PiContext) : TransitionContext =
-        pitrace.Next(PiTraceEvent.RunProcess(GetMemberValue<string> (context.CurrentProcess) "Type"))
+        pitrace.Next(PiTraceEvent.RunProcess(context.CurrentProcess))
 
         match context.CurrentProcess with
         | ProcessSummation summation -> 
@@ -137,6 +152,7 @@ type PiProcessor (resolver:PiExtensionResolver option) =
         | ProcessRestriction (name, continuation) ->
             let id = GetMemberValue name "Id"
             let restrictedId = GetNextRestrictedId id
+            SetMemberValue name "Id" restrictedId
 
             let nameType = TryGetMemberValue name "NameType"
             let data = TryGetMemberValue name "Data"
@@ -154,7 +170,7 @@ type PiProcessor (resolver:PiExtensionResolver option) =
 
             let findName = CreateName id None None
             let restrictedName = CreateName restrictedId (TryGetMemberValue name "NameType") (TryGetMemberValue name "Data")
-            Substitute context.CurrentProcess [| restrictedName :> obj |] [| findName :> obj |] true
+            Substitute continuation [| restrictedName :> obj |] [| findName :> obj |]
             context.NextChild(continuation)
             PushProcess context
             TransitionContext.NoTransition
@@ -166,7 +182,7 @@ type PiProcessor (resolver:PiExtensionResolver option) =
         | _ -> failwith "bad"
 
     let TransitionOut (context:PiContext) (channel:PiJsonObject) (outNames:PiJsonArray) (continuation:PiJsonObject)  =
-        pitrace.Next(PiTraceEvent.TransitionOut(channel, outNames))
+        pitrace.Next(PiTraceEvent.TransitionOut(channel, outNames, continuation))
 
         match channel with
         | PiName (id, nameTypeOpt, _) ->
@@ -187,7 +203,7 @@ type PiProcessor (resolver:PiExtensionResolver option) =
         | _ -> failwith "bad"
 
     let TransitionInp (context:PiContext) (channel:PiJsonObject) (outNames:PiJsonArray) (inpNames:PiJsonArray) (continuation:PiJsonObject)  =
-        pitrace.Next(PiTraceEvent.TransitionInp(channel, outNames, inpNames))
+        pitrace.Next(PiTraceEvent.TransitionInp(channel, outNames, inpNames, continuation))
 
         match channel with
         | PiName (id, nameTypeOpt, _) ->
@@ -207,7 +223,7 @@ type PiProcessor (resolver:PiExtensionResolver option) =
                 context.NextProcess(continuation)
         | _ -> failwith "bad"
 
-        Substitute (context.CurrentProcess) outNames inpNames false
+        Substitute (context.CurrentProcess) outNames inpNames
 
     let TransitionTau (context:PiContext) (continuation:PiJsonObject) =
         pitrace.Next(PiTraceEvent.TransitionTau)
@@ -402,5 +418,8 @@ type PiProcessor (resolver:PiExtensionResolver option) =
     member this.RunFile(filename:string) =
         let program = PiParser.ParseFromFile filename
         this.RunProgram(program)
+
+    member this.ListPending (f:(GuardedContext -> unit)) =
+        pns.ListPending(f)
 
     member this.AsObservable() = pitrace.AsObservable

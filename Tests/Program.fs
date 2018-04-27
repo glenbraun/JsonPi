@@ -77,9 +77,16 @@ let main argv =
             PiTestCase.AsStringWithExtensions("TestSimpleRestrictionWithExtensionReturn", "new (ex) new (ex:MyExtension) ex(x) (* b<x> *) c(h);|ex<y> (* b(g) *) c<g>;", resolver);
             PiTestCase.AsString("TestSimpleReplication", "(!(x(y);)) | (x<a> x<b> x<c>;)");
             PiTestCase.AsString("TestReplication", "(!(x<a> y(b);)) | (x(c) y<d> x(e);)");
+
+            // Milner examples, https://pdfs.semanticscholar.org/5d25/0a3a14f68abb1ae0111d35b8220b4472b277.pdf
+            PiTestCase.AsString("Milner_Page_6_Section_2_2", "x<y>; | x(u) u<v>; | x<z>;");
+            PiTestCase.AsString("Milner_Page_7_1", "(new (x) ( x<y>; | x(u) u<v>;)) | x<z>;");
+            // Same as Section 2.2 but has a replication.
+            PiTestCase.AsString("Milner_Page_7_2", "x<y>; | (!(x(u) u<v>;)) | x<z>;");
+            PiTestCase.AsString("Milner_Page_10_Section_3_1", "x(y,z); | x<y1, z1>; | x<y2, z2>;");
         ]
 
-    let basicmod = PiTestModule("..\\..\\BasicTests.fs", basictests)
+    let basicmod = PiTestModule("..\..\\..\\BasicTests.fs", basictests)
 
     let generate = false
 
@@ -87,7 +94,7 @@ let main argv =
         basicmod.Generate()
     else 
         let bb = BasicTests()
-        //let r = basicmod.RunOne("TestSimpleRestrictionWithExtensionReturn", bb)
+        //let r = basicmod.RunOne("TestSimpleCommMultiParam2to2", bb)
         let r = basicmod.RunAll(bb)
         if r <> PiTestResult.Passed then
             failwith "test failed"

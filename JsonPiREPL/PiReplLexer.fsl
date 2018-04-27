@@ -1,0 +1,41 @@
+﻿{
+module internal PiReplLexer
+
+open System
+open System.Text
+open PiReplParser
+
+// Opens methods related to fslex.exe
+open Microsoft.FSharp.Text.Lexing
+
+let lexeme = LexBuffer<_>.LexemeString
+
+}
+
+let whitespace = [' ' '\t' ]
+let newline = ('\n' | '\r' '\n')
+let quit = ':' ("q" | "quit" | "exit")
+let help = ':' ("h" | "help")
+let run = ':' ("r" | "run")
+let step = ':' ("s" | "step")
+let multi = ':' ("m" | "multi" | "multiline")
+let list = ':' ("l" | "list")
+let reset = ':' ("reset")
+let pi = [ ^ ':' ] [ ^ '\r' '\n' ]*
+let unknown = ':' [ ^ '\r' '\n' ]*
+
+
+rule repl = parse
+// --------------------------
+| quit          { PiReplParser.COMMAND_QUIT }
+| help          { PiReplParser.COMMAND_HELP }
+| run           { PiReplParser.COMMAND_RUN }
+| step          { PiReplParser.COMMAND_STEP }
+| multi         { PiReplParser.COMMAND_MULTI }
+| list          { PiReplParser.COMMAND_LIST }
+| reset         { PiReplParser.COMMAND_RESET }
+| newline       { PiReplParser.END_OF_LINE }
+| pi            { PiReplParser.PI(lexeme lexbuf) }
+| unknown       { PiReplParser.COMMAND_UNKNOWN(lexeme lexbuf) }
+| eof           { PiReplParser.EOF }
+

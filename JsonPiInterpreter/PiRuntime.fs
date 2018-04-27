@@ -19,6 +19,13 @@ type PiNamespace() =
         List.where (fun {CurrentContext=c;} ->
                         c <> context
                    )
+    
+    member this.ListPending (f:(GuardedContext -> unit)) =
+        pendingOutputs.Values |>
+            Seq.iter (fun v -> v |> List.iter f)
+
+        pendingInputs.Values |>
+            Seq.iter (fun v -> v |> List.iter f)
 
     member this.TrySend(channel:PiJsonObject, guard:GuardedContext) =
         match channel with
@@ -165,48 +172,45 @@ let rec internal subpfx (pfx:PiJsonObject) (rn:obj) (fn:obj) =
     | PrefixUnobservable -> ()
     | _ -> failwith "bad"
 
-let rec subs s rn fn (restriction:bool)  = 
+let rec subs s rn fn = 
     match s with
     | SummationInaction -> ()
     | SummationPrefix (pfx, p1) -> 
         subpfx pfx rn fn
-        subp p1 rn fn restriction
+        subp p1 rn fn
     | SummationSum(ls) -> 
-        ls |> Array.iter (fun s1 -> subs s1 rn fn restriction)
+        ls |> Array.iter (fun s1 -> subs s1 rn fn)
     | _ -> failwith "bad"
 
-and subp p (rn:obj) (fn:obj) (restriction:bool) =
+and subp p (rn:obj) (fn:obj) =
     match p with
     | ProcessSummation s -> 
-        subs s rn fn restriction
+        subs s rn fn
     | ProcessComposition (p1, p2) ->
-        subp p1 rn fn restriction
-        subp p2 rn fn restriction
+        subp p1 rn fn
+        subp p2 rn fn
     | ProcessReplication p1 ->
-        subp p1 rn fn restriction
+        subp p1 rn fn
     | ProcessRestriction (n, rp) ->
         match (n, fn) with
         | (PiName (id, _, _), PiName(fnid, _, _)) ->
-            if restriction && id = fnid then
-                SetMemberValue n "Id" (GetMemberValue (rn :?> PiJsonObject) "Id")
-                subp rp rn fn restriction
-            elif not(restriction) && id <> fnid then
-                subp rp rn fn restriction
-        | _ -> ()
+            if id <> fnid then
+                subp rp rn fn
+        | _ -> failwith "bad"
     | ProcessBinding (id, p1, p2) ->
-        subp p1 rn fn restriction
-        subp p2 rn fn restriction
+        subp p1 rn fn
+        subp p2 rn fn
     | ProcessBindingRef id -> ()
     | ProcessModuleRef (id, inIdOpt, p1) -> 
-        subp p1 rn fn restriction
+        subp p1 rn fn
     | _ -> failwith "bad"
 
-let rec internal Substitute (p:PiJsonObject) (r:PiJsonArray) (f:PiJsonArray) (restriction:bool) =
+let rec internal Substitute (p:PiJsonObject) (r:PiJsonArray) (f:PiJsonArray) =
     for i = 0 to f.Length - 1 do
         if r.Length > f.Length && i = f.Length - 1 then
             let ra = Array.sub r i (r.Length - i)
-            subp p ra (f.[i]) restriction
+            subp p ra (f.[i])
         else
             if i < r.Length then
-                subp p (r.[i]) (f.[i]) restriction
+                subp p (r.[i]) (f.[i])
 

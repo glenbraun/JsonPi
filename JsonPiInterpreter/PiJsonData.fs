@@ -525,6 +525,109 @@ type TransitionContext =
                 TransitionContext.NoTransition
             | _ -> failwith "bad"
 
+type PiCodeWriter (tw:TextWriter) =
+    let mutable count = 0
+
+    let elide () = 
+        tw.Write("...")
+        count <- count + 3
+
+    member this.NextColumn(elideAt:int) =
+        for i = count to elideAt+3 do
+            tw.Write(" ")
+
+    member this.Write(s:string, elideAt:int) =
+        if count < elideAt then
+            let sout = s.Substring(0, Math.Min(s.Length, elideAt - count))
+            tw.Write(sout)
+            count <- count + sout.Length
+            if count = elideAt then
+                elide()
+
+    member this.WriteName(name, elideAt) =
+        match name with
+        | PiName(id, _, _) -> this.Write(id, elideAt)
+        | _ -> ()
+    
+    member this.WriteParams (names:PiJsonArray, elideAt) =
+        match names.Length with
+        | 0 -> ()
+        | length ->
+            for i = 0 to length - 2 do
+                this.WriteName(names.[i], elideAt)
+                this.Write(",", elideAt)
+            this.WriteName(names.[length-1], elideAt)
+            
+    member this.WritePrefix(data:obj, elideAt:int) =
+        match data with
+        | PrefixUnobservable -> 
+            this.Write("TAU", elideAt)
+        | PrefixOutput(channel, outNames) ->
+            this.WriteName(channel, elideAt)
+            this.Write("<", elideAt)
+            this.WriteParams(outNames, elideAt)
+            this.Write(">", elideAt)
+        | PrefixInput(channel, inpNames) ->
+            this.WriteName(channel, elideAt)
+            this.Write("(", elideAt)
+            this.WriteParams(inpNames, elideAt)
+            this.Write(")", elideAt)
+        | PrefixMatch(pl, pr, pfx) ->
+            this.Write("[", elideAt)
+            this.Write("]", elideAt)
+            this.WriteParams(pl, elideAt)
+            this.WriteParams(pr, elideAt)
+            this.WritePrefix(pfx, elideAt)
+        | _ -> failwith "bad"
+
+    member this.WriteSummation (data:obj, elideAt:int) =
+        match data with
+        | SummationInaction -> 
+            this.Write(";", elideAt)
+        | SummationPrefix(pfx, continuation) ->
+            this.WritePrefix(pfx, elideAt)
+
+            let inaction =
+                match continuation with
+                |  ProcessSummation(s) ->
+                    match s with
+                    | SummationInaction -> true
+                    | _ -> false
+                | _ -> false
+
+            if inaction 
+                then 
+                    this.Write(";", elideAt)
+                else
+                    this.Write(" ", elideAt)
+                    this.WriteProcess(continuation, elideAt)
+        | SummationSum(sums) ->
+            elide()
+        | _ -> failwith "bad"
+            
+    member this.WriteProcess (data:obj, elideAt:int) = 
+        match data with
+        | ProcessSummation(s) ->
+            this.WriteSummation(s, elideAt)
+        | ProcessRestriction(n, continuation) ->
+            this.Write("new (", elideAt)
+            this.WriteName(n, elideAt)
+            this.Write(") ", elideAt)
+            this.WriteProcess(continuation, elideAt)
+        | ProcessComposition(pl, pr) ->
+            this.WriteProcess(pl, elideAt)
+            this.Write(" | ", elideAt)
+            this.WriteProcess(pr, elideAt)
+        | ProcessReplication(p) ->
+            this.Write("!(", elideAt)
+            this.WriteProcess(p, elideAt)
+            this.Write(")", elideAt)
+        | _ ->
+            ()
+    
+    member this.Reset() =
+        count <- 0
+
 type PiJsonWriter (tw:TextWriter, depthOpt:int option) =
     let mutable depth = 0
 
