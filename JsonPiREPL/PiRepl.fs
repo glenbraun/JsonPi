@@ -71,33 +71,6 @@ let internal PrintTrace (ev:PiTraceEvent) =
 let mutable internal processor = PiProcessor()
 let mutable internal subscription =  processor.AsObservable() |> Observable.subscribe PrintTrace
 
-let rec Read (buffer, index, count) =
-    if quit then
-        0
-    else 
-        let prompt = 
-            match (multiline, step) with
-            | (false, false) -> "Run> "
-            | (false, true) -> "Step> "
-            | (true, false) -> "Run>> "
-            | (true, true) -> "Step >> "
-    
-        Console.Write(prompt)
-
-        let line = Console.ReadLine().Trim()
-        
-        let line2 = 
-            if line = "go" 
-            then Environment.NewLine
-            else
-                if multiline && not(line.StartsWith(":")) 
-                then line + " " 
-                else line + Environment.NewLine    
-
-        Array.blit (line2.ToCharArray()) 0 buffer index (line2.Length)
-        //Console.WriteLine("Line = {0}", line2)
-        line2.Length
-
 let Quit () = 
     quit <- true
 
@@ -167,3 +140,41 @@ let Help () =
     """
     Console.WriteLine(msg)
 
+
+let rec Read (buffer, index, count) =
+    if quit then
+        0
+    else 
+        let prompt = 
+            match (multiline, step) with
+            | (false, false) -> "Run> "
+            | (false, true) -> "Step> "
+            | (true, false) -> "Run>> "
+            | (true, true) -> "Step >> "
+    
+        Console.Write(prompt)
+
+        let line = Console.ReadLine().Trim()
+        
+        let line2 = 
+            if line = "go" 
+            then Environment.NewLine
+            else
+                if multiline
+                then 
+                    if (line.StartsWith(":"))
+                    then 
+                        // this is a hack, but it is convienient to have these commands in multiline mode
+                        match line with
+                        | ":h" | ":help" -> Help(); " "
+                        | ":l" | ":list" -> ListPending(); " "
+                        | ":s" | ":step" -> StepMode(); " "
+                        | ":r" | ":run" -> RunMode(); " "
+                        | ":m" | ":multi" -> ToggleMultiline(); Environment.NewLine
+                        | ":reset" -> Reset(); " "
+                        | _ -> Console.WriteLine("Command not supported in multiline mode. Use :m to exit multiline mode."); " "
+                    else line + " " 
+                else line + Environment.NewLine    
+
+        Array.blit (line2.ToCharArray()) 0 buffer index (line2.Length)
+        line2.Length
