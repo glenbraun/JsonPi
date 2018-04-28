@@ -1,6 +1,7 @@
 ﻿module PiRepl
 
 open System
+open System.Text
 open JsonPi
 open JsonPi.Data
 open System.IO
@@ -8,6 +9,7 @@ open System.IO
 let mutable internal step = false
 let mutable internal quit = false
 let mutable internal multiline = false
+let internal picalc = new StringBuilder()
 
 let internal PrintTrace (ev:PiTraceEvent) =
     use sw = new StringWriter()
@@ -81,6 +83,7 @@ let RunMode () =
     step <- false
 
 let ToggleMultiline () =
+    picalc.Clear() |> ignore
     multiline <- not(multiline)
 
 let CommandUnknown (cmd:string) =
@@ -178,3 +181,41 @@ let rec Read (buffer, index, count) =
 
         Array.blit (line2.ToCharArray()) 0 buffer index (line2.Length)
         line2.Length
+
+    
+let rec Run() =
+    let prompt = 
+        match (multiline, step) with
+        | (false, false) -> "Run> "
+        | (false, true) -> "Step> "
+        | (true, false) -> "Run>> "
+        | (true, true) -> "Step >> "
+    
+    Console.Write(prompt)
+
+    let line = Console.ReadLine().Trim()
+
+    if (line.StartsWith(":"))
+    then 
+        match line with
+        | ":q" | ":quit" | ":exit" -> Quit()
+        | ":h" | ":help" -> Help(); Run()
+        | ":l" | ":list" -> ListPending(); Run()
+        | ":s" | ":step" -> StepMode(); Run()
+        | ":r" | ":run" -> RunMode(); Run()
+        | ":m" | ":multi" -> ToggleMultiline(); Run()
+        | ":reset" -> Reset(); Run()
+        | _ -> CommandUnknown(line); Run()
+    else
+        if multiline 
+        then
+            if line = "go" 
+            then
+                ExecutePi(picalc.ToString())
+                picalc.Clear() |> ignore
+            else
+                picalc.Append(line + Environment.NewLine) |> ignore
+        else
+            picalc.Clear() |> ignore
+            ExecutePi(line)
+        Run()
