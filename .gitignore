@@ -245,4 +245,4 @@ ModelManifest.xml
 .fake/
 
 # REPLBinaries
-!.REPLBinaries/
+!.REPLBinaries/**
