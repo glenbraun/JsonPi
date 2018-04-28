@@ -245,4 +245,5 @@ ModelManifest.xml
 .fake/
 
 # REPLBinaries
+!.REPLBinaries/Linux-x64/publish/*
 !.REPLBinaries/**
