@@ -66,24 +66,19 @@ type PiObservable<'T>() =
                         lock thisLock (fun () -> 
                             subscriptions <- subscriptions.Remove(key1)) } }
 
-    [<Conditional("DEBUG")>]
     member this.Next(obs) =
         Debug.Assert(not finished, "IObserver is already finished")
         next obs
 
-    [<Conditional("DEBUG")>]
     member this.Completed() =
         Debug.Assert(not finished, "IObserver is already finished")
         finished <- true
         completed()
         finished <- false
 
-    [<Conditional("DEBUG")>]
     member this.Error(err) =
         Debug.Assert(not finished, "IObserver is already finished")
         finished <- true
         error err
 
     member this.AsObservable = obs
-
-
