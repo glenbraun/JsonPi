@@ -8,8 +8,6 @@
 
   <ItemGroup>
     <Compile Include="PiRepl.fs" />
-    <None Include="PiReplParser.fsy" />
-    <None Include="PiReplLexer.fsl" />
     <Compile Include="PiReplParser.fs" />
     <Compile Include="PiReplLexer.fs" />
     <Compile Include="Program.fs" />
