@@ -18,11 +18,9 @@ let internal PrintTrace (ev:PiTraceEvent) =
     sw.Write("        ")
     match ev with
     | PiTraceEvent.PushProcess(p) ->
-        sw.Write("Push  ")
-        pcw.WriteProcess(p, 40)
+        ()
     | PiTraceEvent.RunProcess(p) ->
-        sw.Write("Eval  ")
-        pcw.WriteProcess(p, 40)
+        ()
     | PiTraceEvent.PutPrefix(pfx, continuation) ->
         sw.Write("Put   ")
         pcw.WritePrefix(pfx, 20)
