@@ -241,9 +241,11 @@ JsonPi runs on .Net Core so it should run on other platforms than Windows. I've 
 1. Install .Net Core using Step 1 of instructions from https://www.microsoft.com/net/learn/get-started/linux/rhel
 2. Clone or copy this repo
 3. ```cd ./JsonPiREPL```
-4. Run ```dotnet -c Release -r ubuntu.16.04-x64```. 
+4. Run ```dotnet build -c Release -r ubuntu.16.04-x64```. (or, ```dotnet publish -c Release -r ubuntu.16.04-x64``` for self-contained application)
+
    Note: Other platforms for the -r switch can be found at https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
 5. ```cd ./bin/Release/netcoreapp2.0/ubuntu.16.04-x64```.
+   
    Note: You'll see a different folder than ```ubuntu.16.04-x64``` based on the value of the -r switch in step 4.
 6. Run ```./JsonPiREPL```
 
